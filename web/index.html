@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <title>The shortest path</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
+    </head>
+    <body>
+        <h1> 最短路算法 </h1>
+        <div id="app">
+          <h3>请输入点的总数：</h3>
+          <input v-model="message.totalPoints" placeholder="total_points">
+          <h3>请加入边：</h3>
+          <input v-model="message.from" placeholder="起点">
+          <input v-model="message.to" placeholder="终点">
+          <input v-model="message.weight" placeholder="边权">
+          <button v-on:click="add_edge()">添加边到图中</button>
+          <h3>以下是您的邻接链表：</h3>
+          <ul>
+            <li v-for="item in items">
+              从 {{item.from}} 到 {{item.to}} 距离为 {{item.weight}}
+            </li>
+          </ul>
+          <button>生成普里姆算法最小生成树</button>
+          <h3>以下是普里姆算法生成的最小生成树</h3>
+          <ul>
+            <li v-for="item in items">
+              从 {{item.from}} 到 {{item.to}} 长度为 {{item.weight}} 的边被加入了普里姆算法最小生成树
+            </li>
+          </ul>
+          <button>生成克鲁斯卡尔算法最小生成树</button>
+          <h3>以下是克鲁斯卡尔生成的最小生成树</h3>
+          <ul>
+            <li v-for="item in items">
+              从 {{item.from}} 到 {{item.to}} 长度为 {{item.weight}} 的边被加入了克鲁斯卡尔算法最小生成树
+            </li>
+          </ul>
+          <button v-on:click="get_ans()">根据以上图信息，计算路线</button>
+          <h1><h1>
+          <input v-model="message.calFrom" placeholder="起始点">
+          <input v-model="message.calTo" placeholder="终点">
+          <button v-on:click="cal_shortest()">计算最短路长度</button>
+          <h3>长度为{{distance}}</h3>
+          <h3>最短路：</h3>
+<h4>点 1<h4>
+<h5>到 点 2 距离为 3</h5>
+<h5>到 点 3 距离为 4</h5>
+<h5>到 点 4 距离为 1</h5>
+
+<h4>点 2<h4>
+<h5>到 点 1 距离为 3</h5>
+<h5>到 点 3 距离为 1</h5>
+<h5>到 点 4 距离为 1</h5>
+
+<h4>点 3<h4>
+<h5>到 点 1 距离为 4</h5>
+<h5>到 点 2 距离为 1</h5>
+<h5>到 点 4 距离为 1</h5>
+
+<h4>点 4<h4>
+<h5>到 点 1 距离为 1</h5>
+<h5>到 点 2 距离为 1</h5>
+<h5>到 点 3 距离为 1</h5>
+
+
+        </div>
+        <h1> 装配顺序问题 </h1>
+        <div id="order">
+          <h3>请输入依赖关系（按照零件序号输入）：</h3>
+          <input v-model="message.from" placeholder="1">
+          依赖
+          <input v-model="message.to" placeholder="2">
+          <h3>以下是您的依赖关系：</h3>
+          <h5> 1号零件 依赖 2号零件 </h5>
+          <h5> 3号零件 依赖 4号零件 </h5>
+          <h5> 1号零件 依赖 3号零件 </h5>
+          <button>根据以上图信息，生成依赖图</button>
+          <h5></h5>
+          <p>生产的零件:</p><input v-model="message.from" placeholder="生产的零件">
+          <h3>需要先完成：</h3>
+          <h4>2号零件 3号零件 4号零件<h4>
+          <p>拆卸的零件:</p><input v-model="message.from" placeholder="拆卸的零件">
+          <h3>需要先拆卸：</h3>
+          <h4>3号零件 1号零件<h4>
+          <h5></h5>
+        </div>
+        <script>
+        var app = new Vue({
+          el: '#app',
+          data: {
+            message: '{"totalPoints": "6", "edges":"[1, 2, 3]"}',
+            items: [
+            ],
+            shortest: [[1, 2], [3, 4]],
+            distance: undefined
+          },
+          created: function() {
+            this.$http.post('/json', this.message).then(function(req) {
+                this.message = req.body;
+            }, function(err) {
+                console.log(err);
+            });
+          },
+          methods: {
+            add_edge: function(event) {
+              addEdge = {};
+              addEdge.from = this.message.from;
+              addEdge.to = this.message.to;
+              addEdge.weight = this.message.weight;
+              this.$http.post('/addEdge', addEdge).then(function(req) {
+                console.log(req.body.allEdges)
+                this.items = JSON.parse( '[' + req.body.allEdges + ']');
+                console.log(this.items);
+              }, function(err) {
+                  console.log(err);
+              });
+            },
+            get_ans: function(event) {
+              this.$http.post('/getAns', '{}').then(function(req) {
+                this.shortest = JSON.parse( '[' + req.body.allEdges + ']');
+                console.log(req.body.allEdges);
+              }, function(err) {
+                  console.log(err);
+              });
+            },
+            cal_shortest: function(event) {
+              calShortest = {}
+              calShortest.from = this.message.calFrom;
+              calShortest.to = this.message.calTo;
+              console.log(calShortest);
+              this.distance = this.shortest[this.message.calFrom][this.message.calTo];
+              console.log(this.distance);
+            }
+           },
+        })
+        </script>
+    </body>
+</html>
